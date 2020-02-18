@@ -1,0 +1,53 @@
+version: "3"
+
+services:
+    mongo:
+        image: mongo:latest
+        volumes:
+            - ./data/db/master:/data/db
+            - /etc/localtime:/etc/localtime:ro
+        environment:
+            - TZ=Asia/Shanghai
+            - MONGO_INITDB_DATABASE=gfdb
+        container_name: gfdb_mongo
+        expose:
+            - "27017"
+        ports:
+            - "27017"
+    redis:
+        image: redis:4.0.8
+        expose:
+            - "6379"
+        environment:
+            - TZ=Asia/Shanghai
+        container_name: gfdb_redis
+        volumes:
+            #- ./redis:/data
+            - /etc/localtime:/etc/localtime:ro
+        tty: true
+    app:
+        image: go-web-container:2.0
+        environment:
+            - TZ=Asia/Shanghai
+            - ENV=prod
+        ports:
+            - "8001:81"
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./src:/app
+            - ./env:/env
+#            - ./log:/app/log
+        depends_on:
+            - mongo
+            - redis
+        container_name: gfdb_app
+    isso:
+        image: wonderfall/isso
+        environment:
+            ISSO_CORS_ORIGIN: "*"
+        volumes:
+            - ./data/comment:/db
+            - ./isso:/config
+        ports:
+            - 8002:8080
+        container_name: gfdb_isso
